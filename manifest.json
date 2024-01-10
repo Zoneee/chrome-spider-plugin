@@ -1,0 +1,17 @@
+{
+    "manifest_version": 3,
+    "name": "myExtension_demo",
+    "description": "Base Level Extension",
+    "version": "1.0",
+    "action": {
+        "default_icon": "hello_extensions.png"
+    },
+    "background": {
+        "service_worker": "background/background.js"
+    },
+    "permissions": [
+        "activeTab",
+        "scripting",
+        "tabGroups"
+    ]
+}
