@@ -107,18 +107,18 @@
     text-decoration: underline;
 }
 
-.success {
+.green {
     color: #009966;
 }
 
-.fail {
+.red {
     color: red;
 }
 
-.inactive {
+.gray {
     color: gray;
 }
 
-.active {
+.blue {
     color: #3399CC;
 }

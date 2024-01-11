@@ -1,3 +1,9 @@
+var keywords = []
+var data = [
+    ['风险帐号ID', '所属平台', '主页链接'],
+]
+
+var g_status_info
 // 网页右上角添加元素
 function initContainer() {
     // 创建元素
@@ -12,7 +18,7 @@ function initContainer() {
     // 添加样式
     container.classList.add('pluging-container')
     title.classList.add('title')
-    title.innerHTML = 'FB'
+    title.innerHTML = 'INS'
     btn_bar.classList.add('btn-bar')
     import_btn.classList.add('btn')
     import_btn.classList.add('import')
@@ -43,6 +49,8 @@ function initContainer() {
     container.appendChild(import_btn)
     container.appendChild(status_bar)
     document.body.appendChild(container)
+    // 全局变量
+    g_status_info = status_info
 }
 
 function importKeyWords(file) {
@@ -54,15 +62,26 @@ function importKeyWords(file) {
         // 读取完成后的回调，文件内容在 event.target.result 中
         var fileContent = event.target.result;
         console.log(fileContent);
+        keywords = fileContent.split('\r\n')
         alert('文件已导入！')
+        g_status_info.classList.remove('red')
+        g_status_info.classList.add('green')
+        g_status_info.innerHTML = '已导入'
     };
 
     // 以文本形式读取文件内容
     reader.readAsText(file);
+    g_status_info.classList.add('red')
+    g_status_info.innerHTML = '导入中'
 }
-function process() {
-    console.log('process');
-
+async function process() {
+    g_status_info.classList.remove('green')
+    g_status_info.classList.add('red')
+    g_status_info.innerHTML = '执行中！请勿操作！'
+    alert('执行中！请勿操作！')
+    data = [
+        ['风险帐号ID', '所属平台', '主页链接'],
+    ]
     // var targetElement = document.querySelector('#test')
     // var mouseMoveEvent = new MouseEvent('click', {
     //     bubbles: true,
@@ -75,6 +94,39 @@ function process() {
 
 
     var targetElement = document.querySelector('a[href="#"]')
+    sendClick(targetElement)
+    // setTimeout(() => {
+    //     targetElement = document.querySelector('input[placeholder="搜索"]')
+    //         || document.querySelector('input[placeholder="search"]')
+    //     // targetElement.dispatchEvent(mouseMoveEvent);
+    //     // targetElement.value = 'cat'
+    //     sendClick(targetElement)
+    //     sendKey(targetElement, 'cat')
+    // }, 3000);
+
+    for (let i = 0; i < keywords.length; i++) {
+        const k = keywords[i];
+        g_status_info.innerHTML = `正在执行：${k}`
+
+        await waitTime(2000)
+        targetElement = document.querySelector('input[placeholder="搜索"]')
+            || document.querySelector('input[placeholder="search"]')
+        sendClick(targetElement)
+        sendKey(targetElement, k)
+        await waitTime(5000)
+        addData()
+    }
+    await waitTime(2000)
+    exportCsv()
+}
+
+function waitTime(ms) {
+    return new Promise(resolve => {
+        setTimeout(resolve, ms);
+    });
+}
+
+function sendClick(element) {
     var mouseMoveEvent = new MouseEvent('click', {
         bubbles: true,
         cancelable: true,
@@ -82,33 +134,65 @@ function process() {
         // clientX: 135,
         // clientY: 188,
     });
-    targetElement.dispatchEvent(mouseMoveEvent);
-    setTimeout(() => {
-        targetElement = document.querySelector('input[placeholder="搜索"]')
-            || document.querySelector('input[placeholder="search"]')
-        // targetElement.dispatchEvent(mouseMoveEvent);
-        targetElement.value = 'cat'
-    }, 3000);
+    element.dispatchEvent(mouseMoveEvent);
+}
 
-    // var event = new MouseEvent('mousemove', {
-    //     clientX: 135,
-    //     clientY: 188
-    // });
-    // document.dispatchEvent(event);
-    // event = new MouseEvent('click', {
-    //     bubbles: true,
-    //     cancelable: true,
-    //     view: window,
-    // })
-    // document.dispatchEvent(event);
-    // event = new MouseEvent('mousemove', {
-    //     clientX: 194,
-    //     clientY: 108
-    // });
+function sendKey(element, key) {
+    console.log(`send:${key}`);
+    element.value = key
 
-    // var inputElement = document.querySelector('input[placeholder="搜索"]') ||
-    //     document.querySelector('input[placeholder="search"]');
-    // inputElement.innerHTML = 'xxxx'
+    // 创建并触发输入事件
+    var inputEvent = new Event('input', { bubbles: true });
+    element.dispatchEvent(inputEvent);
+
+    // // 创建并触发键盘事件
+    // var enterEvent = new KeyboardEvent('keydown', {
+    //     key: key,
+    //     bubbles: true
+    // });
+    // element.dispatchEvent(enterEvent);
+
+    // var enterEvent = new KeyboardEvent('keyup', {
+    //     key: key,
+    //     bubbles: true
+    // });
+    // element.dispatchEvent(enterEvent);
+}
+
+function addData() {
+    var names = document.querySelectorAll('span[class*="x1lliihq x1plvlek xryxfnj x1n2onr6 x193iq5w xeuugli x1fj9vlw x13faqbe x1vvkbs x1s928wv xhkezso x1gmr53x x1cpjm7i x1fgarty x1943h6x x1i0vuye xvs91rp x1s688f x5n08af x10wh9bi x1wdrske x8viiok x18hxmgj"]')
+    var result = [...names].map(s => {
+        return [s.innerText, 'ins', `https://www.instagram.com/${s.innerText}`]
+    })
+    data = data.concat(result)
+}
+
+function exportCsv() {
+    // 构建 CSV 数据
+    // var csvContent = 'data:text/csv;charset=utf-8,';
+    var csvContent = '';
+    data.forEach(function (row) {
+        csvContent += row.join(',') + '\n';
+    });
+
+    // 创建 Blob 对象
+    var blob = new Blob([csvContent], { type: 'text/csv' });
+
+    // 创建 Blob URL
+    var blobUrl = URL.createObjectURL(blob);
+
+    // 创建并设置下载链接
+    var link = document.createElement('a');
+    link.setAttribute('href', blobUrl);
+    link.setAttribute('download', 'exported_data.csv');
+    document.body.appendChild(link);
+
+    // 模拟点击下载链接
+    link.click();
+
+    // 释放 Blob URL
+    URL.revokeObjectURL(blobUrl);
+    g_status_info.innerHTML = `执行结束`
 }
 
 initContainer()
