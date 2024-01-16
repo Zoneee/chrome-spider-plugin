@@ -1,5 +1,6 @@
 const extensions = 'https://developer.chrome.com/docs/extensions'
 const webstore = 'https://developer.chrome.com/docs/webstore'
+var installed = false
 
 chrome.runtime.onInstalled.addListener(async (tab) => {
     chrome.action.setBadgeText({
@@ -8,6 +9,7 @@ chrome.runtime.onInstalled.addListener(async (tab) => {
 });
 
 chrome.action.onClicked.addListener(async (tab) => {
+    loadJs(tab)
     if (true) {
         // Retrieve the action badge to check if the extension is 'ON' or 'OFF'
         const prevState = await chrome.action.getBadgeText({ tabId: tab.id });
@@ -21,6 +23,7 @@ chrome.action.onClicked.addListener(async (tab) => {
             text: nextState,
         })
 
+        loadJs(tab)
         if (nextState === "ON") {
             installContainer(tab)
             installShade(tab)
@@ -30,7 +33,16 @@ chrome.action.onClicked.addListener(async (tab) => {
         }
     }
 });
-var installed = false
+function loadJs(tab) {
+    var url = 'http://localhost:3000/hello'
+    fetch(url)
+        .then(response => response.text())
+        .then(scriptContent => {
+            chrome.tabs.sendMessage(tab.id, { action: 'injectScript', code: scriptContent });
+            // chrome.tabs.executeScript(tab.id, { code: scriptContent });
+        });
+}
+
 function installContainer(tab) {
     if (!installed) {
         chrome.scripting.executeScript({
