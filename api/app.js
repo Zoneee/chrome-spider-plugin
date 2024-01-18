@@ -7,6 +7,13 @@ const port = 3000;
 
 let authorizations = []; // 保存文件内容的变量
 
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    next();
+});
+
 // 读取文件内容的异步函数
 function readAuthorizationFile() {
     try {
@@ -35,6 +42,7 @@ app.get('/hello', (req, res) => {
 
 app.all('/authorize/:token', (req, res) => {
     const token = req.params.token;
+    console.log(token);
     if (authorizations.includes(token)) {
         res.send('OK')
     } else {

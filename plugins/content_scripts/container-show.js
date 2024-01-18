@@ -1,1 +1,1 @@
-document.querySelector('.pluging-container').style.display = "flex"
+document.querySelector('.pluging-container').style.display = ""

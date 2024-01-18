@@ -1,7 +1,7 @@
 const extensions = 'https://developer.chrome.com/docs/extensions'
 const webstore = 'https://developer.chrome.com/docs/webstore'
 var installed = false
-
+var authorized = false
 chrome.runtime.onInstalled.addListener(async (tab) => {
     chrome.action.setBadgeText({
         text: "OFF",
@@ -9,8 +9,8 @@ chrome.runtime.onInstalled.addListener(async (tab) => {
 });
 
 chrome.action.onClicked.addListener(async (tab) => {
-    loadJs(tab)
-    if (true) {
+    await authorize(tab)
+    if (authorized) {
         // Retrieve the action badge to check if the extension is 'ON' or 'OFF'
         const prevState = await chrome.action.getBadgeText({ tabId: tab.id });
         console.log(prevState);
@@ -23,7 +23,6 @@ chrome.action.onClicked.addListener(async (tab) => {
             text: nextState,
         })
 
-        loadJs(tab)
         if (nextState === "ON") {
             installContainer(tab)
             installShade(tab)
@@ -31,18 +30,38 @@ chrome.action.onClicked.addListener(async (tab) => {
             uninstallContainer(tab)
             uninstallShade(tab)
         }
+    } else {
     }
 });
-function loadJs(tab) {
-    var url = 'http://localhost:3000/hello'
-    fetch(url)
-        .then(response => response.text())
-        .then(scriptContent => {
-            chrome.tabs.sendMessage(tab.id, { action: 'injectScript', code: scriptContent });
-            // chrome.tabs.executeScript(tab.id, { code: scriptContent });
-        });
-}
 
+async function authorize(tab) {
+    try {
+
+        var url = `http://localhost:3000/authorize/${1233}`
+        var resp = await fetch(url)
+        if (resp.text() === 'OK') {
+            content = true
+        } else {
+            chrome.scripting.executeScript({
+                files: ["/content_scripts/unactived.js"],
+                target: { tabId: tab.id },
+            });
+            chrome.scripting.insertCSS({
+                files: ["/content_scripts/unactived.css"],
+                target: { tabId: tab.id },
+            });
+        }
+    } catch (error) {
+        chrome.scripting.executeScript({
+            files: ["/content_scripts/unactived.js"],
+            target: { tabId: tab.id },
+        });
+        chrome.scripting.insertCSS({
+            files: ["/content_scripts/unactived.css"],
+            target: { tabId: tab.id },
+        });
+    }
+}
 function installContainer(tab) {
     if (!installed) {
         chrome.scripting.executeScript({

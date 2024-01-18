@@ -7,15 +7,18 @@ var g_website_type
 // 是否能够执行任务标记
 var g_process_flag = false
 
+chrome.runtime.onMessage.addListener((req, sender, res) => {
+    alert(req.text)
+})
+
 // 网页右上角添加元素
 function initContainer() {
     // 创建元素
     var container = document.createElement('div')
     var title = document.createElement('div')
     var btn_bar = document.createElement('div')
-    var import_btn = document.createElement('input')
+    var import_input = document.createElement('input')
     var process_btn = document.createElement('div')
-    var test_btn = document.createElement('div')
     var status_bar = document.createElement('div')
     var status_label = document.createElement('div')
     var status_info = document.createElement('div')
@@ -24,11 +27,9 @@ function initContainer() {
     title.classList.add('title')
     title.innerHTML = 'INS'
     btn_bar.classList.add('btn-bar')
-    import_btn.classList.add('btn')
-    import_btn.classList.add('import')
-    test_btn.classList.add('btn')
-    test_btn.classList.add('test')
-    import_btn.type = 'file'
+    import_input.classList.add('btn')
+    import_input.classList.add('import')
+    import_input.type = 'file'
     process_btn.classList.add('btn')
     process_btn.classList.add('process')
     process_btn.textContent = '执行'
@@ -36,9 +37,9 @@ function initContainer() {
     status_label.innerHTML = '状态：'
     status_info.classList.add('status')
     status_info.innerHTML = '待执行'
-    test_btn.innerHTML = 'test'
+
     // 添加事件
-    import_btn.addEventListener('change', (e) => {
+    import_input.addEventListener('change', (e) => {
         // 处理文件选择事件
         var selectedFile = e.currentTarget.files[0];
         importKeyWords(selectedFile);
@@ -46,21 +47,17 @@ function initContainer() {
     process_btn.addEventListener('click', () => {
         process()
     })
-    test_btn.addEventListener('click', (e) => {
-        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-            eval(message.code);
-        });
-    })
+
     // 添加元素
-    btn_bar.appendChild(test_btn)
     btn_bar.appendChild(process_btn)
     status_bar.appendChild(status_label)
     status_bar.appendChild(status_info)
     container.appendChild(title)
     container.appendChild(btn_bar)
-    container.appendChild(import_btn)
+    container.appendChild(import_input)
     container.appendChild(status_bar)
     document.body.appendChild(container)
+
     // 全局变量
     g_status_info = status_info
 }
@@ -82,7 +79,7 @@ function initWebsiteType() {
 }
 
 function importKeyWords(file) {
-    console.log('import');
+    console.log('import keyword');
 
     var reader = new FileReader();
 
@@ -102,6 +99,23 @@ function importKeyWords(file) {
     g_status_info.classList.add('red')
     g_status_info.innerHTML = '导入中'
 }
+
+function importAuthorization(file) {
+    console.log('import token');
+
+    var reader = new FileReader();
+
+    reader.onload = function (event) {
+        // 读取完成后的回调，文件内容在 event.target.result 中
+        var fileContent = event.target.result;
+        console.log(fileContent);
+        g_token = fileContent.split('\r\n')[0]
+    };
+
+    // 以文本形式读取文件内容
+    reader.readAsText(file);
+}
+
 async function process() {
     if (!g_process_flag) {
         alert('网站检测失败。不予执行！')

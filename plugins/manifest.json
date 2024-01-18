@@ -1,10 +1,10 @@
 {
     "manifest_version": 3,
-    "name": "myExtension_demo",
-    "description": "Base Level Extension",
+    "name": "dfs_spider_pluging",
+    "description": "ins/fb/tw",
     "version": "1.0",
     "action": {
-        "default_icon": "hello_extensions.png"
+        "default_icon": "icon.png"
     },
     "background": {
         "service_worker": "background/background.js"
@@ -12,6 +12,13 @@
     "permissions": [
         "activeTab",
         "scripting",
-        "tabGroups"
+        "tabGroups",
+        "storage",
+        "unlimitedStorage",
+        "cookies"
+    ],
+    "host_permissions": [
+        "https://www.google.com/",
+        "http://localhost:3000/"
     ]
 }
