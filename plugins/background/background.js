@@ -1,5 +1,4 @@
-const extensions = 'https://developer.chrome.com/docs/extensions'
-const webstore = 'https://developer.chrome.com/docs/webstore'
+
 var installed = false
 var authorized = false
 chrome.runtime.onInstalled.addListener(async (tab) => {
@@ -7,6 +6,20 @@ chrome.runtime.onInstalled.addListener(async (tab) => {
         text: "OFF",
     });
 });
+
+chrome.runtime.onMessage.addListener((req, sender, res) => {
+    if (req.type == 'ins_process') {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            installIns(tabs[0])
+        })
+    }
+})
+
+function waitTime(ms) {
+    return new Promise(resolve => {
+        setTimeout(resolve, ms);
+    });
+}
 
 chrome.action.onClicked.addListener(async (tab) => {
     await authorize(tab)
@@ -24,11 +37,8 @@ chrome.action.onClicked.addListener(async (tab) => {
         })
 
         if (nextState === "ON") {
-            installContainer(tab)
-            installShade(tab)
+            // install(tab)
         } else if (nextState === "OFF") {
-            uninstallContainer(tab)
-            uninstallShade(tab)
         }
     } else {
     }
@@ -36,12 +46,13 @@ chrome.action.onClicked.addListener(async (tab) => {
 
 async function authorize(tab) {
     try {
-
-        var url = `http://localhost:3000/authorize/${1233}`
+        var url = `http://localhost:3000/authorize/${123}`
         var resp = await fetch(url)
-        if (resp.text() === 'OK') {
-            content = true
+        var content = await resp.text()
+        if (content === 'OK') {
+            authorized = true
         } else {
+            authorized = false
             chrome.scripting.executeScript({
                 files: ["/content_scripts/unactived.js"],
                 target: { tabId: tab.id },
@@ -52,6 +63,7 @@ async function authorize(tab) {
             });
         }
     } catch (error) {
+        console.error(error);
         chrome.scripting.executeScript({
             files: ["/content_scripts/unactived.js"],
             target: { tabId: tab.id },
@@ -62,48 +74,37 @@ async function authorize(tab) {
         });
     }
 }
-function installContainer(tab) {
-    if (!installed) {
-        chrome.scripting.executeScript({
-            files: ["/content_scripts/container.js"],
-            target: { tabId: tab.id },
+
+async function installTwitter(tab) {
+    var urls = [
+        'https://twitter.com/search?q=cat&src=typed_query&f=user',
+        'https://twitter.com/search?q=dog&src=typed_query&f=user'
+    ]
+
+    for (let i = 0; i < urls.length; i++) {
+        const url = urls[i];
+
+        chrome.tabs.update(tab.id, { url: url }, function (updatedTab) {
+            // 确保标签页已成功更新
+            if (chrome.runtime.lastError) {
+                console.error(chrome.runtime.lastError);
+            } else {
+                console.log('Tab updated:', updatedTab);
+                // 注入脚本到标签页
+                chrome.scripting.executeScript({
+                    files: ["/twitter/twitter.js"],
+                    target: { tabId: tab.id },
+                });
+            }
         });
-        installed = true
+
+        await waitTime(1000 * 60)
     }
-    else {
-        chrome.scripting.executeScript({
-            files: ["/content_scripts/container-show.js"],
-            target: { tabId: tab.id },
-        });
-    }
-    chrome.scripting.insertCSS({
-        files: ["/content_scripts/container.css"],
-        target: { tabId: tab.id },
-    });
 }
-function installShade(tab) {
+
+async function installIns(tab) {
     chrome.scripting.executeScript({
-        files: ["/content_scripts/shade.js"],
-        target: { tabId: tab.id },
-    });
-    chrome.scripting.insertCSS({
-        files: ["/content_scripts/shade.css"],
-        target: { tabId: tab.id },
-    });
-}
-function uninstallContainer(tab) {
-    chrome.scripting.executeScript({
-        files: ["/content_scripts/container-hidden.js"],
-        target: { tabId: tab.id },
-    });
-    chrome.scripting.removeCSS({
-        files: ["shade.css"],
-        target: { tabId: tab.id },
-    });
-}
-function uninstallShade(tab) {
-    chrome.scripting.removeCSS({
-        files: ["shade.css"],
+        files: ["ins/ins.js"],
         target: { tabId: tab.id },
     });
 }

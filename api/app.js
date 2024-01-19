@@ -14,18 +14,11 @@ app.use((req, res, next) => {
     next();
 });
 
-// 读取文件内容的异步函数
-function readAuthorizationFile() {
-    try {
-        var fileContent = fs.readFileSync('./tokens.txt', 'utf-8');
-        authorizations = fileContent.split('\r\n')
-    } catch (error) {
-        console.error('Error reading file:', error);
-    }
+// 获取YYYY-MM-DD格式时间
+function getNow() {
+    var d = new Date()
+    return new Date(`${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`)
 }
-
-// 初始化时调用读取文件内容的函数
-readAuthorizationFile();
 
 
 // 提供 public 文件夹中的静态文件
@@ -42,11 +35,23 @@ app.get('/hello', (req, res) => {
 
 app.all('/authorize/:token', (req, res) => {
     const token = req.params.token;
-    console.log(token);
-    if (authorizations.includes(token)) {
-        res.send('OK')
+    console.log(`receive: ${token}`);
+    // 读取文件内容
+    var fileContent = fs.readFileSync('./tokens.json', 'utf-8');
+    var authorizations = JSON.parse(fileContent)
+    // 判断token是否存在
+    var item = authorizations.filter(s => s.token === token)[0]
+    if (item === undefined || item === null) {
+        res.status(403).send('Token undifined')
     } else {
-        res.status(403).send('Forbidden')
+        // 判断token是否过期
+        var expire = new Date(item.expire)
+        var now = getNow()
+        if (expire - now > 0) {
+            res.send('OK')
+        } else {
+            res.status(403).send('Token expired')
+        }
     }
 })
 

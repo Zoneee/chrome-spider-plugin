@@ -2,6 +2,8 @@
 var keywords = []
 // 状态element
 var g_status_info
+// 标题element
+var g_title
 // 网站类型
 var g_website_type
 // 是否能够执行任务标记
@@ -60,16 +62,20 @@ function initContainer() {
 
     // 全局变量
     g_status_info = status_info
+    g_title = title
 }
-
+// 判断网站类型
 function initWebsiteType() {
     g_process_flag = true
-    if (document.URL.includes('ttttttttttt')) {
+    if (document.URL.includes('twitter')) {
         g_website_type = 'TW'
-    } else if (document.URL.includes('iiiiiiiii')) {
+        g_title.innerHTML = 'twitter'
+    } else if (document.URL.includes('instagram')) {
         g_website_type = 'INS'
+        g_title.innerHTML = 'instagram'
     } else if (document.URL.includes('fffffffffffff')) {
         g_website_type = 'FB'
+        g_title.innerHTML = 'FB'
     } else {
         alert('网站检测失败！')
         g_status_info = '网站监测失败！'
@@ -77,7 +83,7 @@ function initWebsiteType() {
         g_process_flag = false
     }
 }
-
+// 导入关键词
 function importKeyWords(file) {
     console.log('import keyword');
 
@@ -99,23 +105,7 @@ function importKeyWords(file) {
     g_status_info.classList.add('red')
     g_status_info.innerHTML = '导入中'
 }
-
-function importAuthorization(file) {
-    console.log('import token');
-
-    var reader = new FileReader();
-
-    reader.onload = function (event) {
-        // 读取完成后的回调，文件内容在 event.target.result 中
-        var fileContent = event.target.result;
-        console.log(fileContent);
-        g_token = fileContent.split('\r\n')[0]
-    };
-
-    // 以文本形式读取文件内容
-    reader.readAsText(file);
-}
-
+// 执行任务
 async function process() {
     if (!g_process_flag) {
         alert('网站检测失败。不予执行！')
@@ -196,38 +186,34 @@ async function processTW() {
     var data = [
         ['风险帐号ID', '所属平台', '主页链接'],
     ]
+    debugger
     // 第一次执行
-    // 点击输入框
-    var targetElement = document.querySelector('input[placeholder="Search"]')
-    sendClick(targetElement)
-    // 输入一个词
-    sendKey(targetElement, 'cat')
+    // 换方案
+    // // 点击输入框
+    // var targetElement = document.querySelector('input[placeholder="Search"]')
+    // sendClick(targetElement)
+    // // 输入一个词
+    // await waitTime(5000)
+    // sendKey(targetElement, 'cat')
+    // await waitTime(5000)
+    // sendEnter(targetElement)
+    // await waitTime(5000)
     // 切换到用户标签
-    var peopleTab = document.querySelectorAll('div[role="presentation"]')[3]
-    sendClick(peopleTab)
-    // 向下滚动五个屏幕
-    // 一个屏幕24个用户
-    for (let i = 1; i < 6; i++) {
-        // 每滚动一次滚动距离增加一个屏幕
-        var windowHeight = window.innerHeight;
-        var currentScrollY = window.scrollY;
+    // var peopleTab = document.querySelectorAll('div[role="presentation"]')[3]
+    // sendClick(peopleTab)
+    // // 保存数据
+    // var labs = document.querySelectorAll('div[data-testid="cellInnerDiv"] a[class="css-175oi2r r-1wbh5a2 r-dnmrzs r-1ny4l3l r-1loqt21"]')
+    // // https://twitter.com/ShouldHaveCat
+    // var result = [...labs].map(s => {
+    //     return [s.innerText, 'tw', `https://twitter.com/${s.innerText}`]
+    // })
+    // data = data.concat(result)
 
-        // 计算向下滚动的距离，例如滚动到下一个屏幕
-        var scrollDistance = windowHeight * i;
-
-        window.scrollBy(0, scrollDistance);
-        await waitTime(2000)
-    }
-    // 保存数据
-    var labs = document.querySelectorAll('div[data-testid="cellInnerDiv"] a[class="css-175oi2r r-1wbh5a2 r-dnmrzs r-1ny4l3l r-1loqt21"]')
-    // https://twitter.com/ShouldHaveCat
-    var result = [...labs].map(s => {
-        return [s.innerText, 'tw', `https://twitter.com/${s.innerText}`]
-    })
-    data = data.concat(result)
+    // 导航到url（到这个页面再注入）
+    // https://twitter.com/search?q=cat&src=typed_query&f=user
 
     // 后续执行
-    for (let i = 1; i < keywords.length; i++) {
+    for (let i = 0; i < keywords.length; i++) {
         const k = keywords[i];
         g_status_info.innerHTML = `正在执行：${k}`
 
@@ -237,6 +223,20 @@ async function processTW() {
         sendClick(targetElement)
         sendKey(targetElement, k)
         await waitTime(5000)
+
+        // 向下滚动五个屏幕
+        // 一个屏幕24个用户
+        for (let i = 1; i < 6; i++) {
+            // 每滚动一次滚动距离增加一个屏幕
+            var windowHeight = window.innerHeight;
+            var currentScrollY = window.scrollY;
+
+            // 计算向下滚动的距离，例如滚动到下一个屏幕
+            var scrollDistance = windowHeight * i;
+
+            window.scrollBy(0, scrollDistance);
+            await waitTime(5000)
+        }
 
         // 保存数据
         var labs = document.querySelectorAll('div[data-testid="cellInnerDiv"] a[class="css-175oi2r r-1wbh5a2 r-dnmrzs r-1ny4l3l r-1loqt21"]')
@@ -289,6 +289,21 @@ function sendKey(element, key) {
     // element.dispatchEvent(enterEvent);
 }
 
+function sendEnter(element) {
+    // 创建并触发键盘事件
+    var enterEvent = new KeyboardEvent('keydown', {
+        key: 'Enter',
+        bubbles: true
+    });
+    element.dispatchEvent(enterEvent);
+
+    var enterEvent = new KeyboardEvent('keyup', {
+        key: 'Enter',
+        bubbles: true
+    });
+    element.dispatchEvent(enterEvent);
+}
+
 function exportCsv(data) {
     // 构建 CSV 数据
     // var csvContent = 'data:text/csv;charset=utf-8,';
@@ -318,3 +333,4 @@ function exportCsv(data) {
 }
 
 initContainer()
+initWebsiteType()

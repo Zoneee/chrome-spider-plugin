@@ -1,28 +1,20 @@
 body {
-    margin: 0;
     padding: 0;
-    width: 20rem;
+    margin: 0;
 }
 
 .container {
-    position: relative;
     background-color: #f2f2f2;
     border-top: 1px solid #ccc;
     padding: 1rem;
+    width: 20rem;
 }
 
-/* 标题样式 */
-.title {
-    font-size: 28px;
-    font-weight: 800;
-}
 
 /* 按钮栏样式 */
-.btn-bar {
+.bar {
     display: flex;
-    position: absolute;
-    top: 1rem;
-    right: 0px;
+    margin-bottom: .5rem;
 }
 
 /* 基本按钮样式 */
@@ -79,22 +71,6 @@ body {
     color: #fff;
 }
 
-/* 状态栏样式 */
-.status-bar {
-    display: flex;
-}
-
-/* 基本状态栏样式 */
-.status-bar {
-    padding: 10px;
-    text-align: center;
-    /* bottom: 0; */
-    /* left: 0; */
-    margin-top: 1rem;
-    width: 100%;
-    font-size: 20px;
-}
-
 /* 链接样式 */
 .status {
     /* color: #3498db; */
@@ -103,23 +79,18 @@ body {
     margin: 0 5px;
 }
 
-/* 链接悬停时的样式 */
-.status-bar a:hover {
-    text-decoration: underline;
-}
-
-.success {
+.green {
     color: #009966;
 }
 
-.fail {
+.red {
     color: red;
 }
 
-.inactive {
+.gray {
     color: gray;
 }
 
-.active {
+.blue {
     color: #3399CC;
 }

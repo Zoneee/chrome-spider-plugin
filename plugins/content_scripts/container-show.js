@@ -1,1 +1,4 @@
-document.querySelector('.pluging-container').style.display = ""
+var element = document.querySelector('.pluging-container')
+if (element) {
+    element.style.display = ""
+}
