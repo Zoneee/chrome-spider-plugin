@@ -27,6 +27,12 @@ function init() {
                     installTW(tabs[0])
                 } else if (tabs[0].url.includes('facebook')) {
                     // TODO:facebook
+                    await chrome.storage.local.set({
+                        'facebook_data': [
+                            ['风险帐号ID', '所属平台', '主页链接'],
+                        ]
+                    })
+                    installFB(tabs[0])
                 }
             })
         }
@@ -38,6 +44,11 @@ function init() {
             var storage = await chrome.storage.local.get('twitter_data') || []
             var data = storage['twitter_data'].concat(req.data)
             await chrome.storage.local.set({ 'twitter_data': data })
+        } else if (req.type == 'facebook_data') {
+            // var data = []
+            var storage = await chrome.storage.local.get('facebook_data') || []
+            var data = storage['facebook_data'].concat(req.data)
+            await chrome.storage.local.set({ 'facebook_data': data })
         }
     })
 }
@@ -161,6 +172,65 @@ async function installTW(tab) {
         target: { tabId: tab.id },
         function: exportCsv,
         args: [JSON.stringify(storage['twitter_data'])]
+    })
+}
+// 注入Facebook
+async function installFB(tab) {
+    for (let i = 0; i < keywords.length; i++) {
+        const kw = keywords[i];
+
+        chrome.tabs.update(tab.id,
+            { url: `https://www.facebook.com/search/people?q=${kw}` },
+            function (updatedTab) {
+                // 确保标签页已成功更新
+                if (chrome.runtime.lastError) {
+                    console.error(chrome.runtime.lastError);
+                } else {
+                    console.log('Tab updated:', updatedTab);
+                    // 注入脚本到标签页
+                    chrome.scripting.executeScript({
+                        files: ["facebook/facebook.js"],
+                        target: { tabId: tab.id },
+                    });
+                }
+            });
+        // 等待
+        // TODO:增加功能。收到tw完成单个词汇消息后进行下一词汇。
+        await waitTime(1000 * 60)
+    }
+    function exportCsv(data) {
+        data = JSON.parse(data)
+        // 构建 CSV 数据
+        // var csvContent = 'data:text/csv;charset=utf-8,';
+        var csvContent = '';
+        data.forEach(function (row) {
+            csvContent += row.join(',') + '\n';
+        });
+
+        // 创建 Blob 对象
+        var blob = new Blob([csvContent], { type: 'text/csv' });
+
+        // 创建 Blob URL
+        var blobUrl = URL.createObjectURL(blob);
+
+        // 创建并设置下载链接
+        var link = document.createElement('a');
+        link.setAttribute('href', blobUrl);
+        link.setAttribute('download', 'exported_data.csv');
+        document.body.appendChild(link);
+
+        // 模拟点击下载链接
+        link.click();
+
+        // 释放 Blob URL
+        URL.revokeObjectURL(blobUrl);
+    }
+    // 通过注入方式导出数据
+    var storage = await chrome.storage.local.get('facebook_data')
+    chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        function: exportCsv,
+        args: [JSON.stringify(storage['facebook_data'])]
     })
 }
 function setStatus(status) {

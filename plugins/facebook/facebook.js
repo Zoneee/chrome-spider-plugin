@@ -18,14 +18,14 @@ async function process() {
     }
 
     // 保存数据
-    var labs = document.querySelectorAll('div[data-testid="cellInnerDiv"] a[class="css-175oi2r r-1wbh5a2 r-dnmrzs r-1ny4l3l r-1loqt21"]')
-    // https://twitter.com/ShouldHaveCat
+    var labs = document.querySelectorAll('div[class="x1yztbdb"] a[role="presentation"]')
+    // https://www.facebook.com/profile.php?id=61553147614758
     var result = [...labs].map(s => {
-        return [s.innerText, 'twitter', `https://twitter.com/${s.innerText}`]
+        return [s.innerText, 'facebook', s.href]
     })
     data = data.concat(result)
     await waitTime(2000)
-    chrome.runtime.sendMessage({ type: 'twitter_data', data: data })
+    chrome.runtime.sendMessage({ type: 'facebook_data', data: data })
 }
 
 
@@ -110,6 +110,6 @@ function exportCsv(data) {
     URL.revokeObjectURL(blobUrl);
 }
 
-if (document.URL.includes('twitter')) {
+if (document.URL.includes('facebook')) {
     process()
 }
