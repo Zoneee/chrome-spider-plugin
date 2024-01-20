@@ -1,6 +1,6 @@
 var token = ''
 var keywords = []
-var authorized = true //TODO:测试
+var authorized = true //TODO:启用。demo不启用
 function init() {
     document.getElementById('token').addEventListener('change', (e) => {
         var selectedFile = e.currentTarget.files[0];
@@ -24,15 +24,17 @@ function init() {
                             ['风险帐号ID', '所属平台', '主页链接'],
                         ]
                     })
-                    installTW(tabs[0])
+                    await installTW(tabs[0])
+                    setStatus('任务完成')
                 } else if (tabs[0].url.includes('facebook')) {
-                    // TODO:facebook
+                    // 完成测试
                     await chrome.storage.local.set({
                         'facebook_data': [
                             ['风险帐号ID', '所属平台', '主页链接'],
                         ]
                     })
-                    installFB(tabs[0])
+                    await installFB(tabs[0])
+                    setStatus('任务完成')
                 }
             })
         }
@@ -49,6 +51,8 @@ function init() {
             var storage = await chrome.storage.local.get('facebook_data') || []
             var data = storage['facebook_data'].concat(req.data)
             await chrome.storage.local.set({ 'facebook_data': data })
+        } else if (req.type == 'ins_exported') {
+            setStatus('任务完成')
         }
     })
 }
