@@ -5,11 +5,11 @@ async function process() {
     var targetElement = document.querySelector('a[href="#"]')
     sendClick(targetElement)
 
-    debugger
     var keywords = JSON.parse(window.localStorage.getItem('dsp_spider_keywords'))
     for (let i = 0; i < keywords.length; i++) {
         const k = keywords[i];
 
+        chrome.runtime.sendMessage({ type: 'update_status', data: `正在执行: ${k}` })
         // 等待数据加载
         await waitTime(2000)
         targetElement = document.querySelector('input[placeholder="搜索"]')

@@ -35,6 +35,9 @@ function init() {
                     })
                     await installFB(tabs[0])
                     setStatus('任务完成')
+                } else {
+                    alert('请前往ins/twitter/facebook使用插件！')
+                    setStatus('请前往ins/twitter/facebook使用插件！')
                 }
             })
         }
@@ -53,6 +56,8 @@ function init() {
             await chrome.storage.local.set({ 'facebook_data': data })
         } else if (req.type == 'ins_exported') {
             setStatus('任务完成')
+        } else if (req.type == 'update_status') {
+            setStatus(req.data)
         }
     })
 }
@@ -97,6 +102,8 @@ async function authorize() {
         // 成功
         setStatus('认证成功')
         authorized = true
+        document.getElementById('process').ariaDisabled = 'false'
+        document.getElementById('process').classList.remove('disable')
     } else {
         // 认证失败
         setStatus('认证失败')
@@ -124,6 +131,7 @@ async function installTW(tab) {
     for (let i = 0; i < keywords.length; i++) {
         const kw = keywords[i];
 
+        setStatus(`正在执行: ${kw}`)
         chrome.tabs.update(tab.id,
             { url: `https://twitter.com/search?q=${kw}&src=typed_query&f=user` },
             function (updatedTab) {
@@ -183,6 +191,7 @@ async function installFB(tab) {
     for (let i = 0; i < keywords.length; i++) {
         const kw = keywords[i];
 
+        setStatus(`正在执行: ${kw}`)
         chrome.tabs.update(tab.id,
             { url: `https://www.facebook.com/search/people?q=${kw}` },
             function (updatedTab) {

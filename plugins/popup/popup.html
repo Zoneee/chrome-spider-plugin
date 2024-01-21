@@ -16,11 +16,12 @@
         </div>
         <div class="bar">
             <input type="file" name="keyword" id="keyword" placeholder="请选择关键词文件">
-            <div class="btn" id="process">执行</div>
+            <div class="btn disable" id="process" aria-disabled="true">执行</div>
         </div>
         <div class="bar">
-            <div class="status" id="status">待认证</div>
+            <div class="status red" id="status">待认证</div>
         </div>
+        <div class="status">任务执行时停止操作设备，否则影响数据采集</div>
     </div>
     <script src="popup.js"></script>
 </body>
