@@ -1,7 +1,7 @@
 var token = ''
 var keywords = []
 var authorized = false //TODO:启用。demo不启用
-function init() {
+async function init() {
     document.getElementById('token').addEventListener('change', (e) => {
         var selectedFile = e.currentTarget.files[0];
         importToken(selectedFile)
@@ -66,8 +66,7 @@ function init() {
             console.log('task_end');
         }
     })
-    setTaskStatus(false)
-
+    await setTaskStatus(false)
 }
 // 导入关键词
 function importKeyWords(file) {
@@ -117,15 +116,13 @@ async function authorize() {
         setStatus('认证失败')
     }
 }
+
 // 注入ins
 async function installINS(tab) {
-    function injectedFunction(data) {
-        window.localStorage.setItem('dfs_pluging_keywords', data)
-    }
     // 通过注入方式传递keywords
     await chrome.scripting.executeScript({
         target: { tabId: tab.id },
-        function: injectedFunction,
+        function: sendKeywords,
         args: [JSON.stringify(keywords)]
     })
     // 注入任务脚本
@@ -162,39 +159,12 @@ async function installTW(tab) {
         // TODO:增加功能。收到tw完成单个词汇消息后进行下一词汇。
         await waitTime(1000 * 60)
     }
-    function exportCsv(data) {
-        data = JSON.parse(data)
-        // 构建 CSV 数据
-        // var csvContent = 'data:text/csv;charset=utf-8,';
-        var csvContent = '';
-        data.forEach(function (row) {
-            csvContent += row.join(',') + '\n';
-        });
 
-        // 创建 Blob 对象
-        var blob = new Blob([csvContent], { type: 'text/csv' });
-
-        // 创建 Blob URL
-        var blobUrl = URL.createObjectURL(blob);
-
-        // 创建并设置下载链接
-        var link = document.createElement('a');
-        link.setAttribute('href', blobUrl);
-        link.setAttribute('download', 'exported_data.csv');
-        document.body.appendChild(link);
-
-        // 模拟点击下载链接
-        link.click();
-
-        // 释放 Blob URL
-        URL.revokeObjectURL(blobUrl);
-        chrome.runtime.sendMessage({ type: 'task_end', data: 'OK' })
-    }
     // 通过注入方式导出数据
     var storage = await chrome.storage.local.get('twitter_data')
     await chrome.scripting.executeScript({
         target: { tabId: tab.id },
-        function: exportCsv,
+        function: sendExportCsv,
         args: [JSON.stringify(storage['twitter_data'])]
     })
 }
@@ -227,39 +197,12 @@ async function installFB(tab) {
         // TODO:增加功能。收到tw完成单个词汇消息后进行下一词汇。
         await waitTime(1000 * 60)
     }
-    function exportCsv(data) {
-        data = JSON.parse(data)
-        // 构建 CSV 数据
-        // var csvContent = 'data:text/csv;charset=utf-8,';
-        var csvContent = '';
-        data.forEach(function (row) {
-            csvContent += row.join(',') + '\n';
-        });
 
-        // 创建 Blob 对象
-        var blob = new Blob([csvContent], { type: 'text/csv' });
-
-        // 创建 Blob URL
-        var blobUrl = URL.createObjectURL(blob);
-
-        // 创建并设置下载链接
-        var link = document.createElement('a');
-        link.setAttribute('href', blobUrl);
-        link.setAttribute('download', 'exported_data.csv');
-        document.body.appendChild(link);
-
-        // 模拟点击下载链接
-        link.click();
-
-        // 释放 Blob URL
-        URL.revokeObjectURL(blobUrl);
-        chrome.runtime.sendMessage({ type: 'task_end', data: 'OK' })
-    }
     // 通过注入方式导出数据
     var storage = await chrome.storage.local.get('facebook_data')
     await chrome.scripting.executeScript({
         target: { tabId: tab.id },
-        function: exportCsv,
+        function: sendExportCsv,
         args: [JSON.stringify(storage['facebook_data'])]
     })
 }
@@ -275,14 +218,10 @@ function waitTime(ms) {
 // 设置注入脚本任务状态
 async function setTaskStatus(status) {
     return new Promise((resolve, reject) => {
-        function taskStatus(flag) {
-            window.localStorage.setItem('dfs_pluging_flag', flag)
-        }
-
         chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
             await chrome.scripting.executeScript({
                 target: { tabId: tabs[0].id },
-                function: taskStatus,
+                function: sendTaskStatus,
                 args: [JSON.stringify(status)]
             })
             resolve()
@@ -290,6 +229,41 @@ async function setTaskStatus(status) {
     })
 }
 
+// 注入函数 sendXXXX
+function sendKeywords(data) {
+    window.localStorage.setItem('dfs_pluging_keywords', data)
+}
+function sendTaskStatus(flag) {
+    window.localStorage.setItem('dfs_pluging_flag', flag)
+}
+function sendExportCsv(data) {
+    data = JSON.parse(data)
+    // 构建 CSV 数据
+    // var csvContent = 'data:text/csv;charset=utf-8,';
+    var csvContent = '';
+    data.forEach(function (row) {
+        csvContent += row.join(',') + '\n';
+    });
+
+    // 创建 Blob 对象
+    var blob = new Blob([csvContent], { type: 'text/csv' });
+
+    // 创建 Blob URL
+    var blobUrl = URL.createObjectURL(blob);
+
+    // 创建并设置下载链接
+    var link = document.createElement('a');
+    link.setAttribute('href', blobUrl);
+    link.setAttribute('download', 'exported_data.csv');
+    document.body.appendChild(link);
+
+    // 模拟点击下载链接
+    link.click();
+
+    // 释放 Blob URL
+    URL.revokeObjectURL(blobUrl);
+    chrome.runtime.sendMessage({ type: 'task_end', data: 'OK' })
+}
 init()
 
 chrome.runtime.onInstalled.addListener(async e => {
