@@ -5,7 +5,7 @@ async function process() {
     var targetElement = document.querySelector('a[href="#"]')
     sendClick(targetElement)
 
-    var keywords = JSON.parse(window.localStorage.getItem('dsp_spider_keywords'))
+    var keywords = JSON.parse(window.localStorage.getItem('dfs_pluging_keywords'))
     for (let i = 0; i < keywords.length; i++) {
         const k = keywords[i];
 
@@ -28,6 +28,7 @@ async function process() {
     await waitTime(2000)
     exportCsv(data)
     chrome.runtime.sendMessage({ type: 'ins_exported', data: 'OK' })
+    chrome.runtime.sendMessage({ type: 'task_end', data: 'OK' })
 }
 
 function waitTime(ms) {
@@ -111,6 +112,11 @@ function exportCsv(data) {
     URL.revokeObjectURL(blobUrl);
 }
 
+console.log('instagram 已注入');
 if (document.URL.includes('instagram')) {
-    process()
+    var flag = JSON.parse(window.localStorage.getItem('dfs_pluging_flag'))
+    console.log(`dfs_pluging task check: ${flag}`);
+    if (flag) {
+        process()
+    }
 }

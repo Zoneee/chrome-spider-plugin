@@ -1,6 +1,6 @@
 var token = ''
 var keywords = []
-var authorized = true //TODO:启用。demo不启用
+var authorized = false //TODO:启用。demo不启用
 function init() {
     document.getElementById('token').addEventListener('change', (e) => {
         var selectedFile = e.currentTarget.files[0];
@@ -16,9 +16,11 @@ function init() {
             chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
                 if (tabs[0].url.includes('instagram')) {
                     // 完成测试
-                    installINS(tabs[0])
+                    await setTaskStatus(true)
+                    await installINS(tabs[0])
                 } else if (tabs[0].url.includes('twitter')) {
                     // 完成测试
+                    await setTaskStatus(true)
                     await chrome.storage.local.set({
                         'twitter_data': [
                             ['风险帐号ID', '所属平台', '主页链接'],
@@ -28,6 +30,7 @@ function init() {
                     setStatus('任务完成')
                 } else if (tabs[0].url.includes('facebook')) {
                     // 完成测试
+                    await setTaskStatus(true)
                     await chrome.storage.local.set({
                         'facebook_data': [
                             ['风险帐号ID', '所属平台', '主页链接'],
@@ -58,8 +61,13 @@ function init() {
             setStatus('任务完成')
         } else if (req.type == 'update_status') {
             setStatus(req.data)
+        } else if (req.type == 'task_end') {
+            await setTaskStatus(false)
+            console.log('task_end');
         }
     })
+    setTaskStatus(false)
+
 }
 // 导入关键词
 function importKeyWords(file) {
@@ -70,7 +78,7 @@ function importKeyWords(file) {
         var fileContent = event.target.result;
         console.log(fileContent);
         keywords = fileContent.split('\r\n')
-        window.localStorage.setItem('dsp_spider_keywords', JSON.stringify(keywords))
+        window.localStorage.setItem('dfs_pluging_keywords', JSON.stringify(keywords))
     };
 
     // 以文本形式读取文件内容
@@ -110,18 +118,18 @@ async function authorize() {
     }
 }
 // 注入ins
-function installINS(tab) {
+async function installINS(tab) {
     function injectedFunction(data) {
-        window.localStorage.setItem('dsp_spider_keywords', data)
+        window.localStorage.setItem('dfs_pluging_keywords', data)
     }
     // 通过注入方式传递keywords
-    chrome.scripting.executeScript({
+    await chrome.scripting.executeScript({
         target: { tabId: tab.id },
         function: injectedFunction,
         args: [JSON.stringify(keywords)]
     })
     // 注入任务脚本
-    chrome.scripting.executeScript({
+    await chrome.scripting.executeScript({
         files: ["ins/ins.js"],
         target: { tabId: tab.id },
     });
@@ -134,14 +142,15 @@ async function installTW(tab) {
         setStatus(`正在执行: ${kw}`)
         chrome.tabs.update(tab.id,
             { url: `https://twitter.com/search?q=${kw}&src=typed_query&f=user` },
-            function (updatedTab) {
+            async function (updatedTab) {
                 // 确保标签页已成功更新
                 if (chrome.runtime.lastError) {
                     console.error(chrome.runtime.lastError);
                 } else {
                     console.log('Tab updated:', updatedTab);
                     // 注入脚本到标签页
-                    chrome.scripting.executeScript({
+                    await setTaskStatus(true)
+                    await chrome.scripting.executeScript({
                         files: ["twitter/twitter.js"],
                         target: { tabId: tab.id },
                     });
@@ -177,10 +186,11 @@ async function installTW(tab) {
 
         // 释放 Blob URL
         URL.revokeObjectURL(blobUrl);
+        chrome.runtime.sendMessage({ type: 'task_end', data: 'OK' })
     }
     // 通过注入方式导出数据
     var storage = await chrome.storage.local.get('twitter_data')
-    chrome.scripting.executeScript({
+    await chrome.scripting.executeScript({
         target: { tabId: tab.id },
         function: exportCsv,
         args: [JSON.stringify(storage['twitter_data'])]
@@ -188,20 +198,22 @@ async function installTW(tab) {
 }
 // 注入Facebook
 async function installFB(tab) {
+
     for (let i = 0; i < keywords.length; i++) {
         const kw = keywords[i];
 
         setStatus(`正在执行: ${kw}`)
         chrome.tabs.update(tab.id,
             { url: `https://www.facebook.com/search/people?q=${kw}` },
-            function (updatedTab) {
+            async function (updatedTab) {
                 // 确保标签页已成功更新
                 if (chrome.runtime.lastError) {
                     console.error(chrome.runtime.lastError);
                 } else {
                     console.log('Tab updated:', updatedTab);
                     // 注入脚本到标签页
-                    chrome.scripting.executeScript({
+                    await setTaskStatus(true)
+                    await chrome.scripting.executeScript({
                         files: ["facebook/facebook.js"],
                         target: { tabId: tab.id },
                     });
@@ -237,23 +249,45 @@ async function installFB(tab) {
 
         // 释放 Blob URL
         URL.revokeObjectURL(blobUrl);
+        chrome.runtime.sendMessage({ type: 'task_end', data: 'OK' })
     }
     // 通过注入方式导出数据
     var storage = await chrome.storage.local.get('facebook_data')
-    chrome.scripting.executeScript({
+    await chrome.scripting.executeScript({
         target: { tabId: tab.id },
         function: exportCsv,
         args: [JSON.stringify(storage['facebook_data'])]
     })
 }
+// 任务状态提示
 function setStatus(status) {
     document.getElementById('status').innerHTML = status
 }
-
 function waitTime(ms) {
     return new Promise(resolve => {
         setTimeout(resolve, ms);
     });
 }
+// 设置注入脚本任务状态
+async function setTaskStatus(status) {
+    return new Promise((resolve, reject) => {
+        function taskStatus(flag) {
+            window.localStorage.setItem('dfs_pluging_flag', flag)
+        }
+
+        chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+            await chrome.scripting.executeScript({
+                target: { tabId: tabs[0].id },
+                function: taskStatus,
+                args: [JSON.stringify(status)]
+            })
+            resolve()
+        })
+    })
+}
 
 init()
+
+chrome.runtime.onInstalled.addListener(async e => {
+    await setTaskStatus(false)
+})

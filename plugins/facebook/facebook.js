@@ -110,6 +110,11 @@ function exportCsv(data) {
     URL.revokeObjectURL(blobUrl);
 }
 
+console.log('facebook 已注入');
 if (document.URL.includes('facebook')) {
-    process()
+    var flag = JSON.parse(window.localStorage.getItem('dfs_pluging_flag'))
+    console.log(`dfs_pluging task check: ${flag}`);
+    if (flag) {
+        process()
+    }
 }
