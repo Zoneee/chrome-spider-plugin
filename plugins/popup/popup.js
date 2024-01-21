@@ -130,7 +130,7 @@ async function installINS(tab) {
     })
     // 注入任务脚本
     await chrome.scripting.executeScript({
-        files: ["ins/ins.js"],
+        files: ["scripts/ins.js"],
         target: { tabId: tab.id },
     });
 }
@@ -148,10 +148,12 @@ async function installTW(tab) {
                     console.error(chrome.runtime.lastError);
                 } else {
                     console.log('Tab updated:', updatedTab);
+                    // 页面加载等待
+                    await waitTime(5000)
                     // 注入脚本到标签页
                     await setTaskStatus(true)
                     await chrome.scripting.executeScript({
-                        files: ["twitter/twitter.js"],
+                        files: ["scripts/twitter.js"],
                         target: { tabId: tab.id },
                     });
                 }
@@ -211,10 +213,12 @@ async function installFB(tab) {
                     console.error(chrome.runtime.lastError);
                 } else {
                     console.log('Tab updated:', updatedTab);
+                    // 页面加载等待
+                    await waitTime(5000)
                     // 注入脚本到标签页
                     await setTaskStatus(true)
                     await chrome.scripting.executeScript({
-                        files: ["facebook/facebook.js"],
+                        files: ["scripts/facebook.js"],
                         target: { tabId: tab.id },
                     });
                 }
