@@ -7,21 +7,38 @@ body {
     background-color: #f2f2f2;
     border-top: 1px solid #ccc;
     padding: 1rem;
-    width: 20rem;
+    /* width: 10rem; */
+    width: 15rem;
 }
-
 
 /* 按钮栏样式 */
 .bar {
     display: flex;
+    align-content: center;
+    justify-content: flex-start;
+    align-items: center;
     margin-bottom: .5rem;
+    height: 2rem;
+    padding-bottom: .4rem;
+    border-bottom: 1px solid #CCCCCC;
+}
+
+img {
+    height: 30px;
+    width: 30px;
+    margin-right: 10px;
+}
+
+input {
+    width: 0px;
+    opacity: 0;
 }
 
 /* 基本按钮样式 */
 .btn {
     display: inline-block;
-    margin-left: .5rem;
-    margin-right: .1rem;
+    /* margin-left: .5rem; */
+    /* margin-right: .1rem; */
     padding: 5px 10px;
     font-size: 16px;
     font-weight: bold;
@@ -33,6 +50,7 @@ body {
     color: #3498db;
     background-color: #ffffff;
     transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+    width: 10rem;
 }
 
 /* 鼠标悬停时的样式 */
@@ -94,4 +112,9 @@ body {
 .blue {
     color: #3399CC;
 }
- 
+
+.right {
+    display: flex;
+    align-content: center;
+    justify-content: flex-end;
+}
