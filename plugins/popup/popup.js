@@ -231,12 +231,21 @@ async function setTaskStatus(status) {
 
 // 注入函数 sendXXXX
 function sendKeywords(data) {
+    // 混淆标记
+    // 1==1==2==3==4==5
+    // 源代码
     window.localStorage.setItem('dfs_pluging_keywords', data)
 }
 function sendTaskStatus(flag) {
+    // 混淆标记
+    // 1==1==2==3==4==5
+    // 源代码
     window.localStorage.setItem('dfs_pluging_flag', flag)
 }
 function sendExportCsv(data) {
+    // 混淆标记
+    // 1==1==2==3==4==5
+    // 源代码
     data = JSON.parse(data)
     // 构建 CSV 数据
     // var csvContent = 'data:text/csv;charset=utf-8,';
