@@ -19,6 +19,60 @@ function getNow() {
     var d = new Date()
     return new Date(`${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`)
 }
+function encode(text) {
+    // 将字符串转为bit数组
+    function stringToBitArray(str) {
+        const result = [];
+        for (let i = 0; i < str.length; i++) {
+            const charCode = str.charCodeAt(i);
+            const binaryString = charCode.toString(2).padStart(8, '0');
+            result.push(...binaryString.split('').map(Number));
+        }
+        return result;
+    }
+
+    // 颠倒数组
+    function reverseArray(arr) {
+        return arr.reverse();
+    }
+
+    // 将bit数组转为base64
+    function bitArrayToBase64(bitArray) {
+        const binaryString = bitArray.join('');
+        const byteCharacters = [];
+        for (let i = 0; i < binaryString.length; i += 8) {
+            byteCharacters.push(String.fromCharCode(parseInt(binaryString.substr(i, 8), 2)));
+        }
+        const byteString = byteCharacters.join('');
+        return btoa(byteString);
+    }
+
+    // 生成随机的8位二进制字符串
+    function generateRandomBinaryString(length) {
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += Math.round(Math.random());
+        }
+        return result;
+    }
+
+    // 生成 [min, max] 范围内的随机整数
+    function getRandomIntInclusive(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    var l_salt1 = getRandomIntInclusive(1, 9)
+    var l_salt2 = getRandomIntInclusive(1, 9)
+    const inputString = JSON.stringify({
+        salt1: generateRandomBinaryString(l_salt1),
+        authorized: text,
+        salt2: generateRandomBinaryString(l_salt2)
+    });
+    const bitArray = stringToBitArray(inputString);
+    const reversedArray = reverseArray(bitArray);
+    const base64Output = bitArrayToBase64(reversedArray);
+    return base64Output
+}
 
 
 // 提供 public 文件夹中的静态文件
@@ -42,15 +96,15 @@ app.all('/authorize/:token', (req, res) => {
     // 判断token是否存在
     var item = authorizations.filter(s => s.token === token)[0]
     if (item === undefined || item === null) {
-        res.status(403).send('Token undifined')
+        res.status(403).send(encode('Token undifined'))
     } else {
         // 判断token是否过期
         var expire = new Date(item.expire)
         var now = getNow()
         if (expire - now > 0) {
-            res.send('OK')
+            res.send(encode(true))
         } else {
-            res.status(403).send('Token expired')
+            res.status(403).send(encode('Token expired'))
         }
     }
 })
