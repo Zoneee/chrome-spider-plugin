@@ -101,20 +101,53 @@ function importToken(file) {
 async function authorize() {
     authorized = false
     var resp = await fetch(`http://localhost:3000/authorize/${token}`, { mode: 'no-cors' })
-    var text = await resp.text()
     if (resp.status != 200) {
         // 认证失败
         setStatus('认证失败')
-    } else if (text === 'OK') {
-        // 成功
-        setStatus('认证成功')
-        authorized = true
-        document.getElementById('process').ariaDisabled = 'false'
-        document.getElementById('process').classList.remove('disable')
     } else {
-        // 认证失败
-        setStatus('认证失败')
+        var text = await decord(await resp.text())
+        if (text.authorized) {
+            // 成功
+            setStatus('认证成功')
+            authorized = true
+            document.getElementById('process').ariaDisabled = 'false'
+            document.getElementById('process').classList.remove('disable')
+        }
     }
+}
+// 解密
+async function decord(encrypted) {
+    // 将base64字符串转为bit数组
+    function base64ToBitArray(base64String) {
+        const byteString = atob(base64String);
+        const result = [];
+        for (let i = 0; i < byteString.length; i++) {
+            const binaryString = byteString.charCodeAt(i).toString(2).padStart(8, '0');
+            result.push(...binaryString.split('').map(Number));
+        }
+        return result;
+    }
+
+    // 颠倒数组
+    function reverseArray(arr) {
+        return arr.reverse();
+    }
+
+    // 将bit数组转为字符串
+    function bitArrayToString(bitArray) {
+        const result = [];
+        for (let i = 0; i < bitArray.length; i += 8) {
+            const byte = bitArray.slice(i, i + 8).join('');
+            result.push(String.fromCharCode(parseInt(byte, 2)));
+        }
+        return result.join('');
+    }
+
+    // 解码主程序
+    const base64Input = encrypted; // 使用之前的输出作为输入
+    const reversedArrayDecoded = reverseArray(base64ToBitArray(base64Input));
+    const decodedString = bitArrayToString(reversedArrayDecoded);
+    return JSON.parse(decodedString)
 }
 
 // 注入ins

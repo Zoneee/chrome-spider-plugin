@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "chrome-types": "^0.1.248"
+    "chrome-types": "^0.1.248",
+    "crypto-js": "^4.2.0"
   }
 }
