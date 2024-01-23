@@ -24,6 +24,9 @@ async function init() {
     var processes = document.getElementsByClassName('process')
     processes[0].addEventListener('click', (e) => {
         if (authorized && !e.target.classList.contains('disable')) {
+            e.target.classList.add('disable')
+            var original = e.target.innerText
+            e.target.innerText = '任务执行中···'
             chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
                 if (tabs[0].url.includes('instagram')) {
                     // 完成测试
@@ -33,11 +36,16 @@ async function init() {
                     alert('请前往ins/twitter/facebook使用插件！')
                     setStatus('请前往ins/twitter/facebook使用插件！')
                 }
+                e.target.classList.remove('disable')
+                e.target.innerText = original
             })
         }
     })
     processes[1].addEventListener('click', (e) => {
         if (authorized && !e.target.classList.contains('disable')) {
+            e.target.classList.add('disable')
+            var original = e.target.innerText
+            e.target.innerText = '任务执行中···'
             chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
                 if (tabs[0].url.includes('twitter')) {
                     // 完成测试
@@ -52,11 +60,16 @@ async function init() {
                     alert('请前往ins/twitter/facebook使用插件！')
                     setStatus('请前往ins/twitter/facebook使用插件！')
                 }
+                e.target.classList.remove('disable')
+                e.target.innerText = original
             })
         }
     })
     processes[2].addEventListener('click', (e) => {
         if (authorized && !e.target.classList.contains('disable')) {
+            e.target.classList.add('disable')
+            var original = e.target.innerText
+            e.target.innerText = '任务执行中···'
             chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
                 if (tabs[0].url.includes('facebook')) {
                     // 完成测试
@@ -71,6 +84,8 @@ async function init() {
                     alert('请前往ins/twitter/facebook使用插件！')
                     setStatus('请前往ins/twitter/facebook使用插件！')
                 }
+                e.target.classList.remove('disable')
+                e.target.innerText = original
             })
         }
     })
@@ -143,7 +158,7 @@ async function authorize() {
         setStatus('认证失败')
         document.getElementById('authorize_status').classList.remove('green')
         document.getElementById('authorize_status').classList.add('red')
-        document.getElementById('authorize_status').innerText = '认证失败'
+        document.getElementById('authorize_status').innerText = '许可证已过期\r\n请联系管理员'
     } else {
         var text = await decord(await resp.text())
         if (text.authorized) {
