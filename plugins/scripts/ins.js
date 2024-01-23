@@ -27,7 +27,6 @@ async function process() {
     }
     await waitTime(2000)
     exportCsv(data)
-    chrome.runtime.sendMessage({ type: 'ins_exported', data: 'OK' })
     chrome.runtime.sendMessage({ type: 'task_end', data: 'OK' })
 }
 

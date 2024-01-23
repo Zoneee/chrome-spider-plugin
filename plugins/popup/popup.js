@@ -1,43 +1,34 @@
 var token = ''
 var keywords = []
 var authorized = false //TODO:启用。demo不启用
+var updated_keywords = false
 async function init() {
-    document.getElementById('token').addEventListener('change', (e) => {
+    // 认证事件
+    document.getElementById('authorize').addEventListener('change', async (e) => {
         var selectedFile = e.currentTarget.files[0];
-        importToken(selectedFile)
+        await importToken(selectedFile)
+        await authorize()
+        isReadied()
     })
-    document.getElementById('keyword').addEventListener('change', (e) => {
+    // 关键词事件
+    document.getElementById('keyword').addEventListener('change', async (e) => {
         var selectedFile = e.currentTarget.files[0];
-        importKeyWords(selectedFile)
+        await importKeyWords(selectedFile)
+        updated_keywords = true
+        document.getElementById('keyword_status').classList.add('green')
+        document.getElementById('keyword_status').classList.remove('red')
+        document.getElementById('keyword_status').innerText = '已上传关键词'
+        isReadied()
     })
-    document.getElementById('authorize').addEventListener('click', (e) => { authorize() })
-    document.getElementById('process').addEventListener('click', (e) => {
-        if (authorized) {
+    // ins/twitter/facebook事件
+    var processes = document.getElementsByClassName('process')
+    processes[0].addEventListener('click', (e) => {
+        if (authorized && !e.target.classList.contains('disable')) {
             chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
                 if (tabs[0].url.includes('instagram')) {
                     // 完成测试
-                    await setTaskStatus(true)
+                    await startTask(true)
                     await installINS(tabs[0])
-                } else if (tabs[0].url.includes('twitter')) {
-                    // 完成测试
-                    await setTaskStatus(true)
-                    await chrome.storage.local.set({
-                        'twitter_data': [
-                            ['风险帐号ID', '所属平台', '主页链接'],
-                        ]
-                    })
-                    await installTW(tabs[0])
-                    setStatus('任务完成')
-                } else if (tabs[0].url.includes('facebook')) {
-                    // 完成测试
-                    await setTaskStatus(true)
-                    await chrome.storage.local.set({
-                        'facebook_data': [
-                            ['风险帐号ID', '所属平台', '主页链接'],
-                        ]
-                    })
-                    await installFB(tabs[0])
-                    setStatus('任务完成')
                 } else {
                     alert('请前往ins/twitter/facebook使用插件！')
                     setStatus('请前往ins/twitter/facebook使用插件！')
@@ -45,57 +36,103 @@ async function init() {
             })
         }
     })
-
+    processes[1].addEventListener('click', (e) => {
+        if (authorized && !e.target.classList.contains('disable')) {
+            chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+                if (tabs[0].url.includes('twitter')) {
+                    // 完成测试
+                    await startTask(true)
+                    await chrome.storage.local.set({
+                        'twitter_data': [
+                            ['风险帐号ID', '所属平台', '主页链接'],
+                        ]
+                    })
+                    await installTW(tabs[0])
+                } else {
+                    alert('请前往ins/twitter/facebook使用插件！')
+                    setStatus('请前往ins/twitter/facebook使用插件！')
+                }
+            })
+        }
+    })
+    processes[2].addEventListener('click', (e) => {
+        if (authorized && !e.target.classList.contains('disable')) {
+            chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+                if (tabs[0].url.includes('facebook')) {
+                    // 完成测试
+                    await startTask(true)
+                    await chrome.storage.local.set({
+                        'facebook_data': [
+                            ['风险帐号ID', '所属平台', '主页链接'],
+                        ]
+                    })
+                    await installFB(tabs[0])
+                } else {
+                    alert('请前往ins/twitter/facebook使用插件！')
+                    setStatus('请前往ins/twitter/facebook使用插件！')
+                }
+            })
+        }
+    })
+    // 通信事件
     chrome.runtime.onMessage.addListener(async (req, sender, res) => {
         if (req.type == 'twitter_data') {
+            // Twitter数据中转
             // var data = []
             var storage = await chrome.storage.local.get('twitter_data') || []
             var data = storage['twitter_data'].concat(req.data)
             await chrome.storage.local.set({ 'twitter_data': data })
         } else if (req.type == 'facebook_data') {
+            // Facebook数据中转
             // var data = []
             var storage = await chrome.storage.local.get('facebook_data') || []
             var data = storage['facebook_data'].concat(req.data)
             await chrome.storage.local.set({ 'facebook_data': data })
-        } else if (req.type == 'ins_exported') {
-            setStatus('任务完成')
         } else if (req.type == 'update_status') {
+            // ins任务词更新
             setStatus(req.data)
         } else if (req.type == 'task_end') {
-            await setTaskStatus(false)
-            console.log('task_end');
+            // ins/twitter/facebook任务完成
+            await startTask(false)
+            setStatus('任务完成')
         }
     })
-    await setTaskStatus(false)
+    await startTask(false)
 }
 // 导入关键词
 function importKeyWords(file) {
-    var reader = new FileReader();
+    return new Promise((resolve, reject) => {
+        var reader = new FileReader();
 
-    reader.onload = function (event) {
-        // 读取完成后的回调，文件内容在 event.target.result 中
-        var fileContent = event.target.result;
-        console.log(fileContent);
-        keywords = fileContent.split('\r\n')
-        window.localStorage.setItem('dfs_pluging_keywords', JSON.stringify(keywords))
-    };
+        reader.onload = function (event) {
+            // 读取完成后的回调，文件内容在 event.target.result 中
+            var fileContent = event.target.result;
+            console.log(fileContent);
+            keywords = fileContent.split('\r\n')
+            window.localStorage.setItem('dfs_pluging_keywords', JSON.stringify(keywords))
+            resolve()
+        };
 
-    // 以文本形式读取文件内容
-    reader.readAsText(file);
+        // 以文本形式读取文件内容
+        reader.readAsText(file);
+    })
 }
 // 导入token
 function importToken(file) {
-    var reader = new FileReader();
+    return new Promise((resolve, reject) => {
+        var reader = new FileReader();
 
-    reader.onload = function (event) {
-        // 读取完成后的回调，文件内容在 event.target.result 中
-        var fileContent = event.target.result;
-        console.log(fileContent);
-        token = fileContent.split('\r\n')[0]
-    };
+        reader.onload = function (event) {
+            // 读取完成后的回调，文件内容在 event.target.result 中
+            var fileContent = event.target.result;
+            console.log(fileContent);
+            token = fileContent.split('\r\n')[0]
+            resolve()
+        };
 
-    // 以文本形式读取文件内容
-    reader.readAsText(file);
+        // 以文本形式读取文件内容
+        reader.readAsText(file);
+    })
 }
 // 认证token
 async function authorize() {
@@ -104,14 +141,18 @@ async function authorize() {
     if (resp.status != 200) {
         // 认证失败
         setStatus('认证失败')
+        document.getElementById('authorize_status').classList.remove('green')
+        document.getElementById('authorize_status').classList.add('red')
+        document.getElementById('authorize_status').innerText = '认证失败'
     } else {
         var text = await decord(await resp.text())
         if (text.authorized) {
             // 成功
             setStatus('认证成功')
+            document.getElementById('authorize_status').classList.add('green')
+            document.getElementById('authorize_status').classList.remove('red')
+            document.getElementById('authorize_status').innerText = '认证成功'
             authorized = true
-            document.getElementById('process').ariaDisabled = 'false'
-            document.getElementById('process').classList.remove('disable')
         }
     }
 }
@@ -181,7 +222,7 @@ async function installTW(tab) {
                     // 页面加载等待
                     await waitTime(5000)
                     // 注入脚本到标签页
-                    await setTaskStatus(true)
+                    await startTask(true)
                     await chrome.scripting.executeScript({
                         files: ["scripts/twitter.js"],
                         target: { tabId: tab.id },
@@ -219,7 +260,7 @@ async function installFB(tab) {
                     // 页面加载等待
                     await waitTime(5000)
                     // 注入脚本到标签页
-                    await setTaskStatus(true)
+                    await startTask(true)
                     await chrome.scripting.executeScript({
                         files: ["scripts/facebook.js"],
                         target: { tabId: tab.id },
@@ -248,18 +289,42 @@ function waitTime(ms) {
         setTimeout(resolve, ms);
     });
 }
-// 设置注入脚本任务状态
-async function setTaskStatus(status) {
+// 注入脚本设置是否允许开始任务
+async function startTask(status) {
+    // true/false 允许开始任务/不允许开始任务
     return new Promise((resolve, reject) => {
         chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
             await chrome.scripting.executeScript({
                 target: { tabId: tabs[0].id },
-                function: sendTaskStatus,
+                function: sendStartTask,
                 args: [JSON.stringify(status)]
             })
             resolve()
         })
     })
+}
+// 检测认证和关键词上传。设置process btn状态
+function isReadied() {
+    if (authorized && updated_keywords) {
+        var processes = document.getElementsByClassName('process')
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (tabs[0].url.includes('instagram')) {
+                processes[0].classList.remove('disable')
+                processes[1].classList.add('disable')
+                processes[2].classList.add('disable')
+            } else if (tabs[0].url.includes('twitter')) {
+                processes[0].classList.add('disable')
+                processes[1].classList.remove('disable')
+                processes[2].classList.add('disable')
+            } else if (tabs[0].url.includes('facebook')) {
+                processes[0].classList.add('disable')
+                processes[1].classList.add('disable')
+                processes[2].classList.remove('disable')
+            } else {
+                setStatus('请前往ins/twitter/facebook使用插件！')
+            }
+        })
+    }
 }
 
 // 注入函数 sendXXXX
@@ -269,7 +334,7 @@ function sendKeywords(data) {
     // 源代码
     window.localStorage.setItem('dfs_pluging_keywords', data)
 }
-function sendTaskStatus(flag) {
+function sendStartTask(flag) {
     // 混淆标记
     // 1==1==2==3==4==5
     // 源代码
@@ -309,5 +374,5 @@ function sendExportCsv(data) {
 init()
 
 chrome.runtime.onInstalled.addListener(async e => {
-    await setTaskStatus(false)
+    await startTask(false)
 })

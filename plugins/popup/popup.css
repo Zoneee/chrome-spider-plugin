@@ -67,16 +67,6 @@ input {
     border-color: #ffffff;
 }
 
-.process {
-    background-color: #eb3333;
-    color: #ffffff;
-}
-
-.process:hover {
-    background-color: #009966;
-    color: #ffffff;
-}
-
 .disable {
     border-color: #d6d1d1;
     background-color: #d6d1d1;
@@ -117,4 +107,10 @@ input {
     display: flex;
     align-content: center;
     justify-content: flex-end;
+}
+
+.space-around {
+    display: flex;
+    align-content: center;
+    justify-content: space-around;
 }
