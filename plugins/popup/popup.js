@@ -2,6 +2,7 @@ var token = ''
 var keywords = []
 var authorized = false //TODO:启用。demo不启用
 var updated_keywords = false
+var waitflag = false  // 控制Facebook/Twitter动态等待标记 true/false 等待/继续
 async function init() {
     // 认证事件
     document.getElementById('authorize').addEventListener('change', async (e) => {
@@ -97,16 +98,21 @@ async function init() {
             var storage = await chrome.storage.local.get('twitter_data') || []
             var data = storage['twitter_data'].concat(req.data)
             await chrome.storage.local.set({ 'twitter_data': data })
+            waitflag = false
+            console.log('continue');
         } else if (req.type == 'facebook_data') {
             // Facebook数据中转
             // var data = []
             var storage = await chrome.storage.local.get('facebook_data') || []
             var data = storage['facebook_data'].concat(req.data)
             await chrome.storage.local.set({ 'facebook_data': data })
+            waitflag = false
+            console.log('continue');
         } else if (req.type == 'update_status') {
             // ins任务词更新
             setStatus(req.data)
-        } else if (req.type == 'task_end') {
+        }
+        else if (req.type == 'task_end') {
             // ins/twitter/facebook任务完成
             await startTask(false)
             setStatus('任务完成')
@@ -151,24 +157,32 @@ function importToken(file) {
 }
 // 认证token
 async function authorize() {
-    authorized = false
-    var resp = await fetch(`http://localhost:3000/authorize/${token}`, { mode: 'no-cors' })
-    if (resp.status != 200) {
-        // 认证失败
+    try {
+        authorized = false
+        var resp = await fetch(`http://57.180.184.182:3000/authorize/${token}`, { mode: 'no-cors' })
+        if (resp.status != 200) {
+            // 认证失败
+            setStatus('认证失败')
+            document.getElementById('authorize_status').classList.remove('green')
+            document.getElementById('authorize_status').classList.add('red')
+            document.getElementById('authorize_status').innerText = '许可证已过期\r\n请联系管理员'
+        } else {
+            var text = await decord(await resp.text())
+            if (text.authorized) {
+                // 成功
+                setStatus('认证成功')
+                document.getElementById('authorize_status').classList.add('green')
+                document.getElementById('authorize_status').classList.remove('red')
+                document.getElementById('authorize_status').innerText = '认证成功'
+                authorized = true
+            }
+        }
+    } catch (error) {
+        authorized = false
         setStatus('认证失败')
         document.getElementById('authorize_status').classList.remove('green')
         document.getElementById('authorize_status').classList.add('red')
         document.getElementById('authorize_status').innerText = '许可证已过期\r\n请联系管理员'
-    } else {
-        var text = await decord(await resp.text())
-        if (text.authorized) {
-            // 成功
-            setStatus('认证成功')
-            document.getElementById('authorize_status').classList.add('green')
-            document.getElementById('authorize_status').classList.remove('red')
-            document.getElementById('authorize_status').innerText = '认证成功'
-            authorized = true
-        }
     }
 }
 // 解密
@@ -226,6 +240,7 @@ async function installTW(tab) {
         const kw = keywords[i];
 
         setStatus(`正在执行: ${kw}`)
+        waitflag = true
         chrome.tabs.update(tab.id,
             { url: `https://twitter.com/search?q=${kw}&src=typed_query&f=user` },
             async function (updatedTab) {
@@ -244,9 +259,12 @@ async function installTW(tab) {
                     });
                 }
             });
-        // 等待
-        // TODO:增加功能。收到tw完成单个词汇消息后进行下一词汇。
-        await waitTime(1000 * 60)
+        // 等待，每十秒检测一次是否继续
+        // TODO:测试
+        while (waitflag) {
+            await waitTime(1000 * 10)
+            console.log('wait');
+        }
     }
 
     // 通过注入方式导出数据
@@ -264,6 +282,7 @@ async function installFB(tab) {
         const kw = keywords[i];
 
         setStatus(`正在执行: ${kw}`)
+        waitflag = true
         chrome.tabs.update(tab.id,
             { url: `https://www.facebook.com/search/people?q=${kw}` },
             async function (updatedTab) {
@@ -282,9 +301,12 @@ async function installFB(tab) {
                     });
                 }
             });
-        // 等待
-        // TODO:增加功能。收到tw完成单个词汇消息后进行下一词汇。
-        await waitTime(1000 * 60)
+        // 等待，每十秒检测一次是否继续
+        // TODO:测试
+        while (waitflag) {
+            await waitTime(1000 * 10)
+            console.log('wait');
+        }
     }
 
     // 通过注入方式导出数据

@@ -1,0 +1,21 @@
+vim plugin_server_guard.service
+
+[Unit]
+Description=plugin_server
+
+[Service]
+ExecStart=/usr/bin/node /home/ec2-user/plugin_server/app.js
+Restart=always
+Environment=NODE_ENV=production
+WorkingDirectory=/home/ec2-user/plugin_server
+
+[Install]
+WantedBy=default.target
+
+sudo cp plugin_server_guard.service /etc/systemd/system/
+
+sudo systemctl start plugin_server_guard.service
+sudo systemctl enable plugin_server_guard.service
+
+
+

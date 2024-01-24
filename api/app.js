@@ -4,6 +4,10 @@ const app = express();
 const fs = require('fs')
 const port = 3000;
 
+const btoa = (text) => {
+    return Buffer.from(text, 'binary').toString('base64');
+};
+
 
 let authorizations = []; // 保存文件内容的变量
 
@@ -109,6 +113,6 @@ app.all('/authorize/:token', (req, res) => {
     }
 })
 
-app.listen(port, () => {
-    console.log(`Server is running at http://localhost:${port}`);
+app.listen(port, '0.0.0.0', () => {
+    console.log(`Server is running at http://0.0.0.0:${port}`);
 });

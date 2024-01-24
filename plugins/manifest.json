@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "dfs_pluging",
     "description": "ins/fb/tw",
-    "version": "1.0.18",
+    "version": "1.0.20",
     "action": {
         "default_icon": "icon.png",
         "default_popup": "popup/popup.html"
@@ -18,7 +18,7 @@
         "scripting"
     ],
     "host_permissions": [
-        "https://www.google.com/",
+        "http://57.180.184.182:3000/",
         "http://localhost:3000/"
     ]
 }
