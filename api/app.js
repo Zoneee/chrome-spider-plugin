@@ -8,6 +8,16 @@ const btoa = (text) => {
     return Buffer.from(text, 'binary').toString('base64');
 };
 
+function appendLog(text) {
+    var message = {
+        time: Date.now(),
+        msg: text
+    }
+
+    fs.appendFile('./app.log', JSON.stringify(message) + '\n', { flag: 'a', encoding: 'utf8' }, (e) => {
+        console.log(e);
+    })
+}
 
 let authorizations = []; // 保存文件内容的变量
 
@@ -100,14 +110,17 @@ app.all('/authorize/:token', (req, res) => {
     // 判断token是否存在
     var item = authorizations.filter(s => s.token === token)[0]
     if (item === undefined || item === null) {
+        appendLog(`[unauthorized] token is undifined ${token}`)
         res.status(403).send(encode('Token undifined'))
     } else {
         // 判断token是否过期
         var expire = new Date(item.expire)
         var now = getNow()
         if (expire - now > 0) {
+            appendLog(`[authorized] token is available ${token}`)
             res.send(encode(true))
         } else {
+            appendLog(`[unauthorized] token is expired ${token}`)
             res.status(403).send(encode('Token expired'))
         }
     }
