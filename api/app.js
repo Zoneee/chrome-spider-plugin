@@ -2,17 +2,7 @@ const express = require('express');
 const path = require('path');
 const app = express();
 const fs = require('fs')
-const pino = require('pino');
 const port = 3000;
-
-var streams = [
-    { stream: fs.createWriteStream('./app.log', { flags: 'a', encoding: 'utf8' }) },
-    { level: 'debug', stream: process.stdout },
-]
-
-var logger = pino({
-    level: 'debug' // this MUST be set at the lowest level of the destinations
-}, pino.multistream(streams))
 
 const btoa = (text) => {
     return Buffer.from(text, 'binary').toString('base64');
@@ -110,17 +100,14 @@ app.all('/authorize/:token', (req, res) => {
     // 判断token是否存在
     var item = authorizations.filter(s => s.token === token)[0]
     if (item === undefined || item === null) {
-        logger.info(`[unauthorized] token is undifined ${token}`)
         res.status(403).send(encode('Token undifined'))
     } else {
         // 判断token是否过期
         var expire = new Date(item.expire)
         var now = getNow()
         if (expire - now > 0) {
-            logger.info(`[authorized] token is available ${token}`)
             res.send(encode(true))
         } else {
-            logger.info(`[unauthorized] token is expired ${token}`)
             res.status(403).send(encode('Token expired'))
         }
     }
