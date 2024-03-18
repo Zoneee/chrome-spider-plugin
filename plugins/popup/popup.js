@@ -3,7 +3,37 @@ var keywords = []
 var authorized = false //TODO:启用。demo不启用
 var updated_keywords = false
 var waitflag = false  // 控制Facebook/Twitter动态等待标记 true/false 等待/继续
+
+function i8n() {
+    var btns = document.querySelectorAll('.btn')
+    var zh = chrome.i18n.getMessage('import_authorized_file', 'zh');
+    var en = chrome.i18n.getMessage('import_authorized_file', 'en');
+    console.log(zh);
+    console.log(en);
+    btns[0].textContent = chrome.i18n.getMessage('import_authorized_file');
+    btns[1].textContent = chrome.i18n.getMessage('import_keywords_file');
+    btns[2].textContent = chrome.i18n.getMessage('ins_task');
+    btns[3].textContent = chrome.i18n.getMessage('twitter_task');
+    btns[4].textContent = chrome.i18n.getMessage('facebook_task');
+
+    var status_labs = document.querySelectorAll('.status')
+    status_labs[0].textContent = chrome.i18n.getMessage('status_unauthorized');
+    status_labs[1].textContent = chrome.i18n.getMessage('status_no_upload');
+    status_labs[2].textContent = chrome.i18n.getMessage('status_no_task');
+}
+
 async function init() {
+    // 语言切换事件
+    document.getElementById('translation').addEventListener('click', async (e) => {
+        chrome.storage.sync.get('language', function (data) {
+            var newLanguage = (data.language === 'en') ? 'zh' : 'en';
+            chrome.storage.sync.set({ 'language': newLanguage }, function () {
+                i8n()
+            });
+        });
+    })
+    // i8n切换
+    i8n()
     // 认证事件
     document.getElementById('authorize').addEventListener('change', async (e) => {
         var selectedFile = e.currentTarget.files[0];
@@ -18,7 +48,7 @@ async function init() {
         updated_keywords = true
         document.getElementById('keyword_status').classList.add('green')
         document.getElementById('keyword_status').classList.remove('red')
-        document.getElementById('keyword_status').innerText = '已上传关键词'
+        document.getElementById('keyword_status').innerText = chrome.i18n.getMessage('status_upload')
         isReadied()
     })
     // ins/twitter/facebook事件
@@ -27,15 +57,16 @@ async function init() {
         if (authorized && !e.target.classList.contains('disable')) {
             e.target.classList.add('disable')
             var original = e.target.innerText
-            e.target.innerText = '任务执行中···'
+            e.target.innerText = chrome.i18n.getMessage('status_task_running')
             chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
                 if (tabs[0].url.includes('instagram')) {
                     // 完成测试
                     await startTask(true)
                     await installINS(tabs[0])
                 } else {
-                    alert('请前往ins/twitter/facebook使用插件！')
-                    setStatus('请前往ins/twitter/facebook使用插件！')
+                    var status = chrome.i18n.getMessage('status_no_related_pages')
+                    alert(status)
+                    setStatus(status)
                 }
                 e.target.classList.remove('disable')
                 e.target.innerText = original
@@ -46,7 +77,7 @@ async function init() {
         if (authorized && !e.target.classList.contains('disable')) {
             e.target.classList.add('disable')
             var original = e.target.innerText
-            e.target.innerText = '任务执行中···'
+            e.target.innerText = chrome.i18n.getMessage('status_task_running')
             chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
                 if (tabs[0].url.includes('twitter')) {
                     // 完成测试
@@ -58,8 +89,9 @@ async function init() {
                     })
                     await installTW(tabs[0])
                 } else {
-                    alert('请前往ins/twitter/facebook使用插件！')
-                    setStatus('请前往ins/twitter/facebook使用插件！')
+                    var status = chrome.i18n.getMessage('status_no_related_pages')
+                    alert(status)
+                    setStatus(status)
                 }
                 e.target.classList.remove('disable')
                 e.target.innerText = original
@@ -70,7 +102,7 @@ async function init() {
         if (authorized && !e.target.classList.contains('disable')) {
             e.target.classList.add('disable')
             var original = e.target.innerText
-            e.target.innerText = '任务执行中···'
+            e.target.innerText = chrome.i18n.getMessage('status_task_running')
             chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
                 if (tabs[0].url.includes('facebook')) {
                     // 完成测试
@@ -82,8 +114,9 @@ async function init() {
                     })
                     await installFB(tabs[0])
                 } else {
-                    alert('请前往ins/twitter/facebook使用插件！')
-                    setStatus('请前往ins/twitter/facebook使用插件！')
+                    var status = chrome.i18n.getMessage('status_no_related_pages')
+                    alert(status)
+                    setStatus(status)
                 }
                 e.target.classList.remove('disable')
                 e.target.innerText = original
@@ -115,7 +148,7 @@ async function init() {
         else if (req.type == 'task_end') {
             // ins/twitter/facebook任务完成
             await startTask(false)
-            setStatus('任务完成')
+            setStatus(chrome.i8n.getMessage('ins_task_finish'))
         }
     })
     await startTask(false)
@@ -162,27 +195,30 @@ async function authorize() {
         var resp = await fetch(`http://57.180.184.182:3000/authorize/${token}`, { mode: 'no-cors' })
         if (resp.status != 200) {
             // 认证失败
-            setStatus('认证失败')
+            var status = chrome.i18n.getMessage('status_expired')
+            setStatus(status)
             document.getElementById('authorize_status').classList.remove('green')
             document.getElementById('authorize_status').classList.add('red')
-            document.getElementById('authorize_status').innerText = '许可证已过期\r\n请联系管理员'
+            document.getElementById('authorize_status').innerText = status
         } else {
             var text = await decord(await resp.text())
             if (text.authorized) {
                 // 成功
-                setStatus('认证成功')
+                var status = chrome.i18n.getMessage('status_authorized')
+                setStatus(status)
                 document.getElementById('authorize_status').classList.add('green')
                 document.getElementById('authorize_status').classList.remove('red')
-                document.getElementById('authorize_status').innerText = '认证成功'
+                document.getElementById('authorize_status').innerText = status
                 authorized = true
             }
         }
     } catch (error) {
         authorized = false
-        setStatus('认证失败')
+        var status = chrome.i18n.getMessage('status_expired')
+        setStatus(status)
         document.getElementById('authorize_status').classList.remove('green')
         document.getElementById('authorize_status').classList.add('red')
-        document.getElementById('authorize_status').innerText = '许可证已过期\r\n请联系管理员'
+        document.getElementById('authorize_status').innerText = status
     }
 }
 // 解密
@@ -239,7 +275,7 @@ async function installTW(tab) {
     for (let i = 0; i < keywords.length; i++) {
         const kw = keywords[i];
 
-        setStatus(`正在执行: ${kw}`)
+        setStatus(`${chrome.i18n.getMessage('status_on_task')} ${kw}`)
         waitflag = true
         chrome.tabs.update(tab.id,
             { url: `https://twitter.com/search?q=${kw}&src=typed_query&f=user` },
@@ -281,7 +317,7 @@ async function installFB(tab) {
     for (let i = 0; i < keywords.length; i++) {
         const kw = keywords[i];
 
-        setStatus(`正在执行: ${kw}`)
+        setStatus(`${chrome.i18n.getMessage('status_on_task')} ${kw}`)
         waitflag = true
         chrome.tabs.update(tab.id,
             { url: `https://www.facebook.com/search/people?q=${kw}` },
@@ -358,7 +394,7 @@ function isReadied() {
                 processes[1].classList.add('disable')
                 processes[2].classList.remove('disable')
             } else {
-                setStatus('请前往ins/twitter/facebook使用插件！')
+                setStatus(chrome.i18n.getMessage('status_no_related_pages'))
             }
         })
     }

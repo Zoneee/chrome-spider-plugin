@@ -1,0 +1,47 @@
+{
+    "import_authorized_file": {
+        "message": "请导入认证文件"
+    },
+    "import_keywords_file": {
+        "message": "请导入关键词文件"
+    },
+    "ins_task": {
+        "message": "开始任务 Instagram"
+    },
+    "twitter_task": {
+        "message": "开始任务 Twitter"
+    },
+    "facebook_task": {
+        "message": "开始任务 Facebook"
+    },
+    "status_unauthorized": {
+        "message": "待认证"
+    },
+    "status_authorized": {
+        "message": "认证成功"
+    },
+    "status_expired": {
+        "message": "许可证已过期\r\n请联系管理员"
+    },
+    "status_no_upload": {
+        "message": "待上传关键词"
+    },
+    "status_upload": {
+        "message": "已上传关键词"
+    },
+    "status_no_task": {
+        "message": "等待任务"
+    },
+    "status_on_task": {
+        "message": "search:"
+    },
+    "status_no_related_pages": {
+        "message": "请前往ins/twitter/facebook使用插件！"
+    },
+    "status_task_running": {
+        "message": "任务执行中···"
+    },
+    "status_task_finish": {
+        "message": "任务完成"
+    }
+}

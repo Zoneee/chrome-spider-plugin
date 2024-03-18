@@ -1,0 +1,47 @@
+{
+    "import_authorized_file": {
+        "message": "authorize"
+    },
+    "import_keywords_file": {
+        "message": "import keywords"
+    },
+    "ins_task": {
+        "message": "start ins task"
+    },
+    "twitter_task": {
+        "message": "start twitter task"
+    },
+    "facebook_task": {
+        "message": "start facebook task"
+    },
+    "status_unauthorized": {
+        "message": "unauthorized"
+    },
+    "status_authorized": {
+        "message": "authorized"
+    },
+    "status_expired": {
+        "message": "expired\r\nplease call administrator"
+    },
+    "status_no_upload": {
+        "message": "no upload keywords"
+    },
+    "status_upload": {
+        "message": "uploaded"
+    },
+    "status_no_task": {
+        "message": "no task"
+    },
+    "status_on_task": {
+        "message": "search:"
+    },
+    "status_no_related_pages": {
+        "message": "the plugin only uses on ins/twitter/facebook"
+    },
+    "status_task_running": {
+        "message": "task running..."
+    },
+    "status_task_finish": {
+        "message": "task finish"
+    }
+}

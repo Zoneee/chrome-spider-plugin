@@ -20,5 +20,6 @@
     "host_permissions": [
         "http://57.180.184.182:3000/",
         "http://localhost:3000/"
-    ]
+    ],
+    "default_locale": "en"
 }
