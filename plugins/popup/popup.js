@@ -1,6 +1,6 @@
 var token = ''
 var keywords = []
-var authorized = false //TODO:启用。demo不启用
+var authorized = false //INFO:启用。demo不启用
 var updated_keywords = false
 var waitflag = false  // 控制Facebook/Twitter动态等待标记 true/false 等待/继续
 
@@ -23,15 +23,6 @@ function i8n() {
 }
 
 async function init() {
-    // 语言切换事件
-    document.getElementById('translation').addEventListener('click', async (e) => {
-        chrome.storage.sync.get('language', function (data) {
-            var newLanguage = (data.language === 'en') ? 'zh' : 'en';
-            chrome.storage.sync.set({ 'language': newLanguage }, function () {
-                i8n()
-            });
-        });
-    })
     // i8n切换
     i8n()
     // 认证事件
@@ -296,7 +287,6 @@ async function installTW(tab) {
                 }
             });
         // 等待，每十秒检测一次是否继续
-        // TODO:测试
         while (waitflag) {
             await waitTime(1000 * 10)
             console.log('wait');

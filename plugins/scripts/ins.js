@@ -14,6 +14,7 @@ async function process() {
         await waitTime(2000)
         targetElement = document.querySelector('input[placeholder="搜索"]')
             || document.querySelector('input[placeholder="search"]')
+            || document.querySelector('input[placeholder="Search"]')
         sendClick(targetElement)
         sendKey(targetElement, k)
         await waitTime(5000)

@@ -1,5 +1,4 @@
 async function process() {
-    // TODO:测试
     var data = [
         // ['风险帐号ID', '所属平台', '主页链接'],
     ]
